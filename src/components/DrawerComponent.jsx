@@ -1,5 +1,5 @@
 // src/components/DrawerComponent.jsx
-import React from 'react';
+import React, { useState } from 'react';
 import { styled, useTheme } from '@mui/material/styles';
 import MuiDrawer from '@mui/material/Drawer';
 import List from '@mui/material/List';
@@ -14,6 +14,7 @@ import { Link, useLocation } from 'react-router-dom';
 import Collapse from '@mui/material/Collapse';
 import ExpandLess from '@mui/icons-material/ExpandLess';
 import ExpandMore from '@mui/icons-material/ExpandMore';
+import Popover from '@mui/material/Popover';
 import DrawerHeaderComponent from './DrawerHeaderComponent';
 import LogoComponent from './LogoComponent';
 import Box from '@mui/material/Box';
@@ -58,12 +59,26 @@ const Drawer = styled(MuiDrawer, { shouldForwardProp: (prop) => prop !== 'open' 
   }),
 );
 
-const DrawerComponent = ({ open, handleDrawerClose,handleDrawerOpen }) => {
+const DrawerComponent = ({ open, handleDrawerClose }) => {
   const theme = useTheme();
   const location = useLocation();
-  const [nestedOpen, setNestedOpen] = React.useState({});
+  const [nestedOpen, setNestedOpen] = useState({});
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [popoverContent, setPopoverContent] = useState([]);
 
-  const handleClick = (item) => {
+  const handlePopoverOpen = (event, nestedItems) => {
+    setAnchorEl(event.currentTarget);
+    setPopoverContent(nestedItems);
+  };
+
+  const handlePopoverClose = () => {
+    setAnchorEl(null);
+  };
+
+  const openPopover = Boolean(anchorEl);
+  const id = openPopover ? 'nested-popover' : undefined;
+
+  const handleNestedClick = (item) => {
     setNestedOpen((prevOpen) => ({ ...prevOpen, [item]: !prevOpen[item] }));
   };
 
@@ -112,20 +127,25 @@ const DrawerComponent = ({ open, handleDrawerClose,handleDrawerOpen }) => {
   return (
     <Drawer variant="permanent" open={open}>
       <LogoComponent />
-      <DrawerHeaderComponent handleDrawerClose={handleDrawerClose} handleDrawerOpen={handleDrawerOpen} open={open} />
+      <DrawerHeaderComponent handleDrawerClose={handleDrawerClose} open={open} />
       <Divider />
       <Box sx={{ overflowY: 'auto', flexGrow: 1 }}>
         <List>
           {menuItems.map((item, index) => (
             <React.Fragment key={index}>
-              <ListItem disablePadding sx={{ display: 'block' }}>
+              <ListItem
+                disablePadding
+                sx={{ display: 'block' }}
+                onMouseEnter={(event) => !open && item.nested && handlePopoverOpen(event, item.nested)}
+                onMouseLeave={handlePopoverClose}
+              >
                 <ListItemButton
                   sx={{
                     minHeight: 48,
                     justifyContent: open ? 'initial' : 'center',
                     px: 2.5,
                   }}
-                  onClick={() => item.nested && handleClick(item.text)}
+                  onClick={() => item.nested && handleNestedClick(item.text)}
                   selected={location.pathname === item.path}
                 >
                   <ListItemIcon
@@ -179,6 +199,55 @@ const DrawerComponent = ({ open, handleDrawerClose,handleDrawerOpen }) => {
         </List>
       </Box>
       <Divider />
+      {!open && (
+        <Popover
+          id={id}
+          open={openPopover}
+          anchorEl={anchorEl}
+          onClose={handlePopoverClose}
+          anchorOrigin={{
+            vertical: 'top',
+            horizontal: 'right',
+          }}
+          transformOrigin={{
+            vertical: 'top',
+            horizontal: 'left',
+          }}
+          onMouseEnter={() => setAnchorEl(anchorEl)} // Keep the popover open when hovering over it
+          onMouseLeave={handlePopoverClose} // Close the popover when the mouse leaves
+        >
+          <List>
+            {popoverContent.map((nestedItem, nestedIndex) => (
+              <ListItemButton
+                key={nestedIndex}
+                component={nestedItem.external ? 'a' : Link}
+                to={nestedItem.external ? undefined : nestedItem.path}
+                href={nestedItem.external ? nestedItem.path : undefined}
+                target={nestedItem.external ? '_blank' : undefined}
+                rel={nestedItem.external ? 'noopener' : undefined}
+                sx={{
+                  pl: 4,
+                  minHeight: 48,
+                  justifyContent: 'initial',
+                }}
+                selected={location.pathname === nestedItem.path}
+                onClick={handlePopoverClose} // Close the popover when an item is clicked
+              >
+                <ListItemIcon
+                  sx={{
+                    minWidth: 0,
+                    mr: 3,
+                    justifyContent: 'center',
+                  }}
+                >
+                  {nestedItem.icon}
+                </ListItemIcon>
+                <ListItemText primary={nestedItem.text} />
+              </ListItemButton>
+            ))}
+          </List>
+        </Popover>
+      )}
     </Drawer>
   );
 };
