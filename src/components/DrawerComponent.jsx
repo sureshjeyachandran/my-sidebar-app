@@ -58,7 +58,7 @@ const Drawer = styled(MuiDrawer, { shouldForwardProp: (prop) => prop !== 'open' 
   }),
 );
 
-const DrawerComponent = ({ open, handleDrawerClose }) => {
+const DrawerComponent = ({ open, handleDrawerClose,handleDrawerOpen }) => {
   const theme = useTheme();
   const location = useLocation();
   const [nestedOpen, setNestedOpen] = React.useState({});
@@ -112,7 +112,7 @@ const DrawerComponent = ({ open, handleDrawerClose }) => {
   return (
     <Drawer variant="permanent" open={open}>
       <LogoComponent />
-      <DrawerHeaderComponent handleDrawerClose={handleDrawerClose} open={open} />
+      <DrawerHeaderComponent handleDrawerClose={handleDrawerClose} handleDrawerOpen={handleDrawerOpen} open={open} />
       <Divider />
       <Box sx={{ overflowY: 'auto', flexGrow: 1 }}>
         <List>

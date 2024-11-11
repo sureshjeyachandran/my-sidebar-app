@@ -23,7 +23,7 @@ export default function MiniDrawer({ children }) {
     <Box sx={{ display: 'flex' }}>
       <CssBaseline />
       <AppBarComponent open={open} handleDrawerOpen={handleDrawerOpen} />
-      <DrawerComponent open={open} handleDrawerClose={handleDrawerClose} />
+      <DrawerComponent open={open} handleDrawerClose={handleDrawerClose} handleDrawerOpen={handleDrawerOpen}/>
       <MainContent>{children}</MainContent>
     </Box>
   );
